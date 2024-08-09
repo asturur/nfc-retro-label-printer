@@ -1,7 +1,7 @@
 import type { MutableRefObject } from 'react';
 import { createContext, useContext } from 'react';
 import type { StaticCanvas } from 'fabric';
-import type { templateType } from '../cardsTemplates';
+import type { templateType } from '../resourcesTypedef';
 
 export type CardData = {
   file: File | HTMLImageElement,

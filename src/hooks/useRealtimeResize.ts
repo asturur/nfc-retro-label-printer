@@ -1,12 +1,12 @@
 import { type MutableRefObject, useEffect } from 'react';
-import { cardLikeOptions, cardRatio } from '../constants';
-import { type layoutOrientation } from '../cardsTemplates';
+import { cardLikeOptions } from '../constants';
+import { type layoutOrientation } from '../resourcesTypedef';
 import { util } from 'fabric';
 import { throttle } from '../utils';
-import type { StaticCanvas } from 'fabric';
+import type { Canvas, StaticCanvas } from 'fabric';
 
 const resizeFunction = (
-  fabricCanvas: StaticCanvas,
+  fabricCanvas: StaticCanvas | Canvas,
   orientation: layoutOrientation,
   bbox: DOMRectReadOnly,
 ) => {
@@ -16,41 +16,36 @@ const resizeFunction = (
     );
     return;
   }
-  const chosenWidth = Math.floor(bbox.width - 20);
-  const ratio = orientation === 'horizontal' ? cardRatio : 1 / cardRatio;
+
+  const template = orientation === 'horizontal' ? cardLikeOptions :  {
+    width: cardLikeOptions.height,
+    height: cardLikeOptions.width,
+  };
+
+  const scale = util.findScaleToFit(template, bbox);
   fabricCanvas.setDimensions({
-    width: chosenWidth,
-    height: Math.ceil(chosenWidth / ratio),
+    width: template.width * scale,
+    height: template.height * scale,
   });
-  let scale;
-  if (orientation === 'horizontal') {
-    scale = util.findScaleToFit(cardLikeOptions, fabricCanvas);
-  } else {
-    scale = util.findScaleToFit(
-      {
-        width: cardLikeOptions.height,
-        height: cardLikeOptions.width,
-      },
-      fabricCanvas,
-    );
-  }
   fabricCanvas.setZoom(scale);
 };
 
 const resizerFunctionCreator = (
   fabricCanvas: StaticCanvas,
   orientation: layoutOrientation,
+  throttleMs = 33,
 ): ResizeObserverCallback =>
   throttle<ResizeObserverCallback>((entries) => {
     const bbox = entries[0].contentRect;
     resizeFunction(fabricCanvas, orientation, bbox);
-  }, 33);
+  }, throttleMs);
 
 type useRealTimeResizeParams = {
-  fabricCanvas: StaticCanvas | null;
+  fabricCanvas: StaticCanvas | null | Canvas;
   padderRef: MutableRefObject<HTMLDivElement | null>;
   ready: boolean;
   layout: 'vertical' | 'horizontal';
+  throttleMs: number;
 };
 
 export const useRealTimeResize = ({
@@ -58,17 +53,18 @@ export const useRealTimeResize = ({
   fabricCanvas,
   ready,
   layout,
+  throttleMs,
 }: useRealTimeResizeParams) => {
   useEffect(() => {
     const divRef = padderRef.current;
     // only start observing after mounting is complete.
     if (fabricCanvas && divRef && ready) {
-      const callback = resizerFunctionCreator(fabricCanvas, layout);
+      const callback = resizerFunctionCreator(fabricCanvas, layout, throttleMs);
       const resizeObserver = new ResizeObserver(callback);
       resizeObserver.observe(divRef);
       return () => {
         resizeObserver.unobserve(divRef);
       };
     }
-  }, [fabricCanvas, ready, padderRef, layout]);
+  }, [fabricCanvas, ready, padderRef, layout, throttleMs]);
 };

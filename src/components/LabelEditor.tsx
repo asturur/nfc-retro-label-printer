@@ -3,11 +3,14 @@ import { FabricCanvasWrapper } from './FabricCanvasWrapper';
 import { useLabelEditor } from '../hooks/useLabelEditor';
 import { useFileDropperContext, type CardData } from '../contexts/fileDropper';
 import Checkbox from '@mui/material/Checkbox';
+import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/Edit';
 
 type LabelEditorProps = {
   index: number;
   className: string;
   card: CardData;
+  setCardToEdit: (arg: number) => void;
 };
 
 export type MenuInfo = {
@@ -16,7 +19,12 @@ export type MenuInfo = {
   left: number | string;
 };
 
-export const LabelEditor = ({ index, className, card }: LabelEditorProps) => {
+export const LabelEditor = ({
+  index,
+  className,
+  card,
+  setCardToEdit,
+}: LabelEditorProps) => {
   const { selectedCardsCount, setSelectedCardsCount } = useFileDropperContext();
   const [, startTransition] = useTransition();
   const padderRef = useRef<HTMLDivElement | null>(null);
@@ -35,7 +43,7 @@ export const LabelEditor = ({ index, className, card }: LabelEditorProps) => {
     >
       <label htmlFor={card.key}>
         <FabricCanvasWrapper setFabricCanvas={setFabricCanvas} />
-        <div className="floating-checkbox">
+        <div className="floating-checkbox right">
           <Checkbox
             color="secondary"
             id={card.key}
@@ -55,6 +63,21 @@ export const LabelEditor = ({ index, className, card }: LabelEditorProps) => {
           />
         </div>
       </label>
+      {card.template?.canEdit && (
+        <div className="floating-checkbox left">
+          <IconButton
+            color="secondary"
+            id={card.key}
+            onClick={(e: MouseEvent<HTMLButtonElement>) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setCardToEdit(index);
+            }}
+          >
+            <EditIcon />
+          </IconButton>
+        </div>
+      )}
     </div>
   );
 };

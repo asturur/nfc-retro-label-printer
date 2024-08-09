@@ -7,7 +7,7 @@ import { SmallDropZone } from './SmallDropZone';
 import { templateAuthors } from '../templateAuthors';
 
 import './HomePage.css';
-import { lazy } from 'react';
+import { Fragment, lazy } from 'react';
 
 const Carousel = lazy(() => import('./Carousel'));
 
@@ -114,12 +114,12 @@ export const HomePage = () => {
             <br />
             Templates provided by{' '}
             {Object.values(templateAuthors).map(({ name, href }, index) => (
-              <>
+              <Fragment key={name}>
                 <a key={`auth_${index}`} href={href}>
                   {name}
                 </a>
                 ,{' '}
-              </>
+              </Fragment>
             ))}
           </Typography>
         </div>

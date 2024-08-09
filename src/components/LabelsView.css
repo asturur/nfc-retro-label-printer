@@ -36,9 +36,16 @@
   background-color: #5361D9;
   position: absolute;
   top: 0;
-  right: 0;
   transition: opacity 400ms;
   border-radius: 8px;
+}
+
+.labelContainer .floating-checkbox.left {
+  left: 0;
+}
+
+.labelContainer .floating-checkbox.right {
+  right: 0;
 }
 
 .labelContainer.card-selected .floating-checkbox {

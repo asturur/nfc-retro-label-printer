@@ -1,8 +1,8 @@
 import { createContext, useContext } from 'react';
 import {
-  type templateType,
   defaultTemplate,
 } from '../cardsTemplates';
+import type { templateType } from '../resourcesTypedef';
 import {
   type PrintTemplate,
   defaultPrinterTemplate,

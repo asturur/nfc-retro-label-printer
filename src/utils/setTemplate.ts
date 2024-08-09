@@ -13,10 +13,13 @@ import {
   Rect,
 } from 'fabric';
 import { cardLikeOptions } from '../constants';
-import { type templateType, type templateOverlay } from '../cardsTemplates';
 import { CardData } from '../contexts/fileDropper';
+import type { templateType, templateOverlay } from '../resourcesTypedef';
+import { processCustomizations } from './processCustomizations';
 
 FabricObject.ownDefaults.objectCaching = false;
+/* add the ability to parse 'id' to rects */
+Rect.ATTRIBUTE_NAMES = [...Rect.ATTRIBUTE_NAMES, 'id'];
 
 export const scaleImageToOverlayArea = (
   template: templateType,
@@ -121,7 +124,7 @@ const parseSvg = (url: string): Promise<SerializedGroupProps> =>
     extractUniqueColorsFromGroup(group);
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    return group.toObject(['original_stroke', 'original_fill']);
+    return group.toObject(['original_stroke', 'original_fill', 'id']);
   });
 
 const reposition = (
@@ -204,10 +207,9 @@ export const setTemplateOnCanvases = async (
       );
     }
     const mainImage = canvas.getObjects('image')[0] as FabricImage;
-    mainImage.shadow = shadow
-      ? new Shadow({ ...Shadow.parseShadow(shadow), nonScaling: true })
-      : null;
-
+    if (mainImage && shadow) {
+      mainImage.shadow = new Shadow({ ...Shadow.parseShadow(shadow), nonScaling: true });
+    }
     const couple1 = [overlayImageElement, overlay, overlayImageSource] as [
       Group | HTMLImageElement,
       templateOverlay,
@@ -306,6 +308,10 @@ export const setTemplateOnCanvases = async (
       }
       reposition(clipPath, template.layout);
     }
+    if (template.edits) {
+      processCustomizations(canvas, template.edits);
+    }
+
     canvas.requestRenderAll();
   }
   // this could returned by the promise right away

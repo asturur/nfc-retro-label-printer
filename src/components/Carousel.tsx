@@ -1,9 +1,10 @@
 import Typography from '@mui/material/Typography';
-import { templateType, templates } from '../cardsTemplates';
+import { templates } from '../cardsTemplates';
 import './Carousel.css';
 import { useAppDataContext } from '../contexts/appData';
 import { useFileAdder } from '../hooks/useFileAdder';
 import { templateAuthors } from '../templateAuthors';
+import type { templateType } from '../resourcesTypedef';
 
 const TemplatesCarousel = () => {
   const { setTemplate } = useAppDataContext();
@@ -33,6 +34,7 @@ const TemplatesCarousel = () => {
                 e.preventDefault();
                 return false;
               }}
+              key={tData.key}
             >
               <div
                 className={`carouselItem ${tData.layout}`}

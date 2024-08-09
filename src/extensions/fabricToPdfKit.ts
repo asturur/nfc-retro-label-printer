@@ -156,7 +156,7 @@ const transformPdf = (fabricObject: FabricObject, pdfDoc: any) => {
   pdfDoc.transform(...matrix);
 };
 
-const addImageToPdfKit = async (
+const addImageToPdf = async (
   fabricImage: FabricImage<ImageProps>,
   pdfDoc: any,
 ) => {
@@ -164,16 +164,24 @@ const addImageToPdfKit = async (
   transformPdf(fabricImage, pdfDoc);
   const originalSize = fabricImage.getOriginalSize();
   // @ts-expect-error this isn't typed
-  if ((fabricImage.originalFile as File) instanceof File) {
+  const originalFile = fabricImage.originalFile;
+  if ((originalFile as File) instanceof File) {
     // @ts-expect-error this isn't typed
     const arrayBuffer = await (fabricImage.originalFile as File).arrayBuffer();
     pdfDoc.image(arrayBuffer, -fabricImage.width / 2, -fabricImage.height / 2, {
       width: originalSize.width,
       height: originalSize.height,
     });
+  } else if (originalFile) {
+    const imageFetch = await (await fetch(originalFile.src)).arrayBuffer();
+    pdfDoc.image(imageFetch, -fabricImage.width / 2, -fabricImage.height / 2, {
+      width: originalSize.width,
+      height: originalSize.height,
+    });
   } else {
-    // @ts-expect-error this isn't typed
-    const imageFetch = await (await fetch(fabricImage.originalFile.src)).arrayBuffer();
+    // todo fix
+    // images part of the template will likely be duplicated.
+    const imageFetch = await (await fetch(fabricImage.getSrc())).arrayBuffer();
     pdfDoc.image(imageFetch, -fabricImage.width / 2, -fabricImage.height / 2, {
       width: originalSize.width,
       height: originalSize.height,
@@ -182,20 +190,24 @@ const addImageToPdfKit = async (
   pdfDoc.restore();
 };
 
-const addGroupToPdf = (
+const addGroupToPdf = async (
   group: Group,
   pdfDoc: any,
 ) => {
   pdfDoc.save();
   transformPdf(group, pdfDoc);
-  group.forEachObject((object) => {
+  const objs = group.getObjects();
+  for ( const object of objs) {
     if (object instanceof Path) {
       addPathToPdf(object, pdfDoc);
     }
     if (object instanceof Rect) {
       addRectToPdf(object, pdfDoc);
     }
-  });
+    if (object instanceof FabricImage) {
+      await addImageToPdf(object, pdfDoc);
+    }
+  }
   pdfDoc.restore();
 };
 
@@ -223,16 +235,16 @@ export const addCanvasToPdfPage = async (
   }
 
   if (canvas.backgroundImage instanceof Group) {
-    addGroupToPdf(canvas.backgroundImage, pdfDoc);
+    await addGroupToPdf(canvas.backgroundImage, pdfDoc);
   } else {
     // add it as an image.
   }
 
   const mainImage = canvas.getObjects('image')[0] as FabricImage;
-  await addImageToPdfKit(mainImage, pdfDoc);
+  await addImageToPdf(mainImage, pdfDoc);
 
   if (canvas.overlayImage instanceof Group) {
-    addGroupToPdf(canvas.overlayImage, pdfDoc);
+    await addGroupToPdf(canvas.overlayImage, pdfDoc);
   } else {
     // add it as an image.
   }

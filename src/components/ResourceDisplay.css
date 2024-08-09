@@ -1,0 +1,25 @@
+.resourceItem {
+  display: flex;
+  max-width: 100%;
+  flex-direction: column;
+  padding: 8px;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.resourceItem img {
+  border: 1px solid transparent;
+}
+
+.resourceItem:hover img {
+  border: 1px solid white;
+}
+
+.verticalStack .resourceItem img {
+  max-width: 100%;
+}
+
+.horizontalStack .resourceItem img {
+  max-height: 100%;
+}
